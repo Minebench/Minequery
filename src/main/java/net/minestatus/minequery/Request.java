@@ -4,14 +4,28 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 
+import net.md_5.bungee.api.Callback;
+import net.md_5.bungee.api.Favicon;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.ServerPing;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.config.ListenerInfo;
+import net.md_5.bungee.api.connection.Connection;
+import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.api.event.ProxyPingEvent;
+import net.md_5.bungee.connection.InitialHandler;
+import net.md_5.bungee.protocol.ProtocolConstants;
 
 public final class Request extends Thread {
     private final Minequery plugin;
@@ -26,9 +40,7 @@ public final class Request extends Thread {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-
             handleRequest(socket, reader.readLine());
-
 
             socket.close();
         } catch(IOException ex) {
@@ -40,44 +52,75 @@ public final class Request extends Thread {
         if(request == null) {
             return;
         }
-        if(request.equalsIgnoreCase("QUERY")) {
-            List<String> playerList = new ArrayList<String>();
-            for(ProxiedPlayer player : ProxyServer.getInstance().getPlayers()) {
+
+        ListenerInfo info = plugin.getProxy().getConfig().getListeners().iterator().next();
+        ProxyPingEvent pingEvent = new ProxyPingEvent(
+                new InitialHandler(plugin.getProxy(), info),
+                new ServerPing(
+                        new ServerPing.Protocol("MineQuery", 0),
+                        new ServerPing.Players(info.getMaxPlayers(), plugin.getProxy().getOnlineCount(), new ServerPing.PlayerInfo[0]),
+                        info.getMotd(),
+                        ""
+                ),
+                (result, error) -> {}
+        );
+        plugin.getProxy().getPluginManager().callEvent(pingEvent);
+        Response response = new Response(
+                info.getHost().getPort(),
+                plugin.getProxy().getPlayers(),
+                pingEvent.getResponse().getPlayers().getOnline(),
+                pingEvent.getResponse().getPlayers().getMax()
+        );
+
+        if(request.equalsIgnoreCase("QUERY" + plugin.getPassword())) {
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            out.writeBytes(response.toString());
+        } else if(request.equalsIgnoreCase("QUERY_JSON" + plugin.getPassword())) {
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            out.writeBytes(response.toJson());
+        }
+    }
+
+    public class Response {
+        private final int serverPort;
+        private final int onlineCount;
+        private final int maxPlayers;
+        private final ArrayList<String> playerList;
+
+        public Response(int serverPort, Collection<ProxiedPlayer> players, int onlineCount, int maxPlayers) {
+            this.serverPort = serverPort;
+            this.onlineCount = onlineCount;
+            this.maxPlayers = maxPlayers;
+            playerList = new ArrayList<>();
+            for(ProxiedPlayer player : players) {
                 playerList.add(player.getName());
             }
-
-
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-            out.writeBytes(
-                    "SERVERPORT " + plugin.getServerPort() + "\n" +
-                    "PLAYERCOUNT " + ProxyServer.getInstance().getPlayers().size() + "\n" +
-                    "MAXPLAYERS " + plugin.getMaxPlayers() + "\n" +
-                    "PLAYERLIST " + Arrays.toString(playerList.toArray()) + "\n"
-            );
         }
-        if(request.equalsIgnoreCase("QUERY_JSON")) {
 
+        public String toString() {
+            return "SERVERPORT " + serverPort + "\n" +
+                    "PLAYERCOUNT " + onlineCount + "\n" +
+                    "MAXPLAYERS " + maxPlayers + "\n" +
+                    "PLAYERLIST " + Arrays.toString(playerList.toArray()) + "\n";
+        }
+
+        public String toJson() {
             StringBuilder resp = new StringBuilder();
             resp.append("{");
-            resp.append("\"serverPort\":").append(plugin.getServerPort()).append(",");
-            resp.append("\"playerCount\":").append(ProxyServer.getInstance().getPlayers().size()).append(",");
-            resp.append("\"maxPlayers\":").append(plugin.getMaxPlayers()).append(",");
+            resp.append("\"serverPort\":").append(serverPort).append(",");
+            resp.append("\"playerCount\":").append(onlineCount).append(",");
+            resp.append("\"maxPlayers\":").append(maxPlayers).append(",");
             resp.append("\"playerList\":");
             resp.append("[");
-
-
-            String prefix = "";
-            for(ProxiedPlayer player : plugin.getProxy().getPlayers()) {
-                resp.append(prefix);
-                prefix = ",";
-                resp.append("\"").append(player.getName()).append("\"");
+            if (!playerList.isEmpty()) {
+                resp.append(playerList.get(0));
+                for (int i = 1; i < playerList.size(); i++) {
+                    resp.append(",").append("\"").append(playerList.get(i)).append("\"");
+                }
             }
             resp.append("]");
             resp.append("}\n");
-
-
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-            out.writeBytes(resp.toString());
+            return resp.toString();
         }
     }
 }

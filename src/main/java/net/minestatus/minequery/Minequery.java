@@ -13,10 +13,9 @@ import net.md_5.bungee.api.plugin.Plugin;
 public final class Minequery extends Plugin {
     public static final String CONFIG_FILE = "minequery.properties";
     private String serverIP;
-    private int serverPort;
     private int port;
-    private int maxPlayers;
     private QueryServer server;
+    private String password;
 
     public void onEnable() {
         try {
@@ -28,9 +27,8 @@ public final class Minequery extends Plugin {
 
                 Properties props = new Properties();
                 props.setProperty("server-ip", "127.0.0.1");
-                props.setProperty("server-port", "25565");
                 props.setProperty("minequery-port", "25566");
-                props.setProperty("max-players", "314");
+                props.setProperty("password", "");
 
                 OutputStream out = new FileOutputStream(file);
                 props.store(out, "Minequery settings");
@@ -39,9 +37,8 @@ public final class Minequery extends Plugin {
             props.load(new FileReader(file));
 
             serverIP = props.getProperty("server-ip", "ANY");
-            serverPort = Integer.parseInt(props.getProperty("server-port", "25565"));
             port = Integer.parseInt(props.getProperty("minequery-port", "25566"));
-            maxPlayers = Integer.parseInt(props.getProperty("max-players", "32"));
+            password = props.getProperty("password", "");
             if(serverIP.equals("")) {
                 serverIP = "ANY";
             }
@@ -64,15 +61,11 @@ public final class Minequery extends Plugin {
         }
     }
 
-    public int getServerPort() {
-        return serverPort;
-    }
-
     public int getPort() {
         return port;
     }
 
-    public int getMaxPlayers() {
-        return maxPlayers;
+    public String getPassword() {
+        return password;
     }
 }
