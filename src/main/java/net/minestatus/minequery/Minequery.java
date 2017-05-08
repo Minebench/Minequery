@@ -16,6 +16,7 @@ public final class Minequery extends Plugin {
     private int port;
     private QueryServer server;
     private String password;
+    private boolean logging;
 
     public void onEnable() {
         try {
@@ -29,6 +30,7 @@ public final class Minequery extends Plugin {
                 props.setProperty("server-ip", "127.0.0.1");
                 props.setProperty("minequery-port", "25566");
                 props.setProperty("password", "");
+                props.setProperty("logging", "true");
 
                 OutputStream out = new FileOutputStream(file);
                 props.store(out, "Minequery settings");
@@ -39,6 +41,7 @@ public final class Minequery extends Plugin {
             serverIP = props.getProperty("server-ip", "ANY");
             port = Integer.parseInt(props.getProperty("minequery-port", "25566"));
             password = props.getProperty("password", "");
+            logging = Boolean.parseBoolean(props.getProperty("logging", "true"));
             if(serverIP.equals("")) {
                 serverIP = "ANY";
             }
@@ -67,5 +70,11 @@ public final class Minequery extends Plugin {
 
     public String getPassword() {
         return password;
+    }
+
+    public void log(String message) {
+        if (logging) {
+            getLogger().log(Level.INFO, message);
+        }
     }
 }

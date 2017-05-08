@@ -4,26 +4,32 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.UUID;
 import java.util.logging.Level;
 
-import net.md_5.bungee.BungeeCord;
 import net.md_5.bungee.api.ServerPing;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ListenerInfo;
+import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ProxyPingEvent;
-import net.md_5.bungee.connection.InitialHandler;
 
-public final class Request extends Thread {
+public final class Request extends Thread implements PendingConnection {
     private final Minequery plugin;
     private final Socket socket;
+    private final ListenerInfo info;
+    private String disconnected = null;
 
     public Request(Minequery plugin, Socket socket) {
         this.plugin = plugin;
         this.socket = socket;
+        info = plugin.getProxy().getConfig().getListeners().iterator().next();
     }
 
     public void run() {
@@ -43,11 +49,12 @@ public final class Request extends Thread {
             return;
         }
 
-        ListenerInfo info = plugin.getProxy().getConfig().getListeners().iterator().next();
+        plugin.log(getAddress() + " - '" + request + "'");
+
         ProxyPingEvent pingEvent = new ProxyPingEvent(
-                new InitialHandler(BungeeCord.getInstance(), info),
+                this,
                 new ServerPing(
-                        new ServerPing.Protocol("MineQuery", 0),
+                        new ServerPing.Protocol(plugin.getDataFolder().getName(), 0),
                         new ServerPing.Players(info.getMaxPlayers(), plugin.getProxy().getOnlineCount(), new ServerPing.PlayerInfo[0]),
                         info.getMotd(),
                         ""
@@ -55,6 +62,12 @@ public final class Request extends Thread {
                 (result, error) -> {}
         );
         plugin.getProxy().getPluginManager().callEvent(pingEvent);
+        if (disconnected != null) {
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            out.writeBytes(disconnected);
+            return;
+        }
+
         Response response = new Response(
                 info.getHost().getPort(),
                 plugin.getProxy().getPlayers(),
@@ -62,13 +75,90 @@ public final class Request extends Thread {
                 pingEvent.getResponse().getPlayers().getMax()
         );
 
-        if(request.equalsIgnoreCase("QUERY" + plugin.getPassword())) {
+        if (request.equalsIgnoreCase("QUERY" + plugin.getPassword())) {
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
             out.writeBytes(response.toString());
         } else if(request.equalsIgnoreCase("QUERY_JSON" + plugin.getPassword())) {
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
             out.writeBytes(response.toJson());
+        } else {
+            plugin.getLogger().log(Level.WARNING, getAddress() + " tried to request '" + request + "' which is not supported?");
         }
+    }
+
+    @Override
+    public int getVersion() {
+        return 0;
+    }
+
+    @Override
+    public InetSocketAddress getVirtualHost() {
+        return (InetSocketAddress) socket.getLocalSocketAddress();
+    }
+
+    @Override
+    public ListenerInfo getListener() {
+        return info;
+    }
+
+    @Override
+    public String getUUID() {
+        return null;
+    }
+
+    @Override
+    public UUID getUniqueId() {
+        return null;
+    }
+
+    @Override
+    public void setUniqueId(UUID uuid) {
+
+    }
+
+    @Override
+    public boolean isOnlineMode() {
+        return plugin.getProxy().getConfig().isOnlineMode();
+    }
+
+    @Override
+    public void setOnlineMode(boolean onlineMode) {
+
+    }
+
+    @Override
+    public boolean isLegacy() {
+        return false;
+    }
+
+    @Override
+    public InetSocketAddress getAddress() {
+        return new InetSocketAddress(socket.getInetAddress(), socket.getPort());
+    }
+
+    @Override
+    public void disconnect(String reason) {
+        this.disconnected = reason;
+    }
+
+    @Override
+    public void disconnect(BaseComponent... reason) {
+        disconnect(TextComponent.toPlainText(reason));
+    }
+
+    @Override
+    public void disconnect(BaseComponent reason) {
+        disconnect(TextComponent.toPlainText(reason));
+    }
+
+    @Override
+    public boolean isConnected() {
+        return false;
+    }
+
+    @Override
+    public Unsafe unsafe() {
+        return null;
     }
 
     public class Response {
