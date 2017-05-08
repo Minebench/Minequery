@@ -4,28 +4,18 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
 import java.util.logging.Level;
 
-import net.md_5.bungee.api.Callback;
-import net.md_5.bungee.api.Favicon;
-import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.BungeeCord;
 import net.md_5.bungee.api.ServerPing;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ListenerInfo;
-import net.md_5.bungee.api.connection.Connection;
-import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ProxyPingEvent;
 import net.md_5.bungee.connection.InitialHandler;
-import net.md_5.bungee.protocol.ProtocolConstants;
 
 public final class Request extends Thread {
     private final Minequery plugin;
@@ -55,7 +45,7 @@ public final class Request extends Thread {
 
         ListenerInfo info = plugin.getProxy().getConfig().getListeners().iterator().next();
         ProxyPingEvent pingEvent = new ProxyPingEvent(
-                new InitialHandler(plugin.getProxy(), info),
+                new InitialHandler(BungeeCord.getInstance(), info),
                 new ServerPing(
                         new ServerPing.Protocol("MineQuery", 0),
                         new ServerPing.Players(info.getMaxPlayers(), plugin.getProxy().getOnlineCount(), new ServerPing.PlayerInfo[0]),
