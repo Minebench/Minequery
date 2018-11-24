@@ -1,0 +1,3 @@
+name: '${minecraft.plugin.name}'
+main: de.minebench.minequery.bungee.Minequery
+version: '${minecraft.plugin.version}'

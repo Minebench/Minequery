@@ -1,3 +1,0 @@
-name: Minequery
-main: net.minestatus.minequery.Minequery
-version: '${minecraft.plugin.version}'
