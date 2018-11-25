@@ -9,7 +9,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -132,7 +131,6 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin {
                         return 0;
                     }
 
-                    @Nullable
                     @Override
                     public InetSocketAddress getVirtualHost() {
                         return null;
@@ -168,6 +166,7 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin {
     @Override
     public List<String> executeCommand(String command) {
         BukkitQuerySender querySender = new BukkitQuerySender(this);
+        getLogger().info("Executing: " + command);
         getServer().dispatchCommand(querySender, command);
         return querySender.getResponse();
     }
@@ -183,6 +182,7 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin {
             }
         }
         if (p != null) {
+            getLogger().info("Making " + p.getName() + " execute:" + command);
             return getServer().dispatchCommand(p, command);
         }
         return false;

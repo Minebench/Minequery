@@ -9,7 +9,6 @@ import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.plugin.Plugin;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -26,11 +25,14 @@ public class BukkitQuerySender extends QuerySender implements CommandSender {
     @Override
     public void sendMessage(String message) {
         response.add(message);
+        plugin.getLogger().info(message);
     }
 
     @Override
     public void sendMessage(String[] messages) {
-        Collections.addAll(response, messages);
+        for (String message : messages) {
+            sendMessage(message);
+        }
     }
 
     @Override
@@ -115,11 +117,11 @@ public class BukkitQuerySender extends QuerySender implements CommandSender {
 
     private class QuerySpigot extends Spigot {
         public void sendMessage(net.md_5.bungee.api.chat.BaseComponent component) {
-            response.add(TextComponent.toLegacyText(component));
+            BukkitQuerySender.this.sendMessage(TextComponent.toLegacyText(component));
         }
 
         public void sendMessage(net.md_5.bungee.api.chat.BaseComponent... components) {
-            response.add(TextComponent.toLegacyText(components));
+            BukkitQuerySender.this.sendMessage(TextComponent.toLegacyText(components));
         }
     }
 }

@@ -163,6 +163,7 @@ public final class Minequery extends Plugin implements MinequeryPlugin, Listener
     @Override
     public List<String> executeCommand(String command) {
         BungeeQuerySender querySender = new BungeeQuerySender(this);
+        getLogger().info("Executing: " + command);
         getProxy().getPluginManager().dispatchCommand(querySender, command);
         return querySender.getResponse();
     }
@@ -178,6 +179,7 @@ public final class Minequery extends Plugin implements MinequeryPlugin, Listener
             }
         }
         if (p != null) {
+            getLogger().info("Making " + p.getName() + " execute:" + command);
             return getProxy().getPluginManager().dispatchCommand(p, command);
         }
         return false;
