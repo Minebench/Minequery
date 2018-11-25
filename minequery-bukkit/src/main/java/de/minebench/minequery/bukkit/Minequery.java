@@ -7,7 +7,6 @@ import de.minebench.minequery.QueryData;
 import de.minebench.minequery.QueryServer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -31,8 +30,8 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin {
     private QueryServer server;
     private String password;
     private boolean logging;
-    private Set<String> includedServers;
-    private Set<String> hiddenServers;
+    private Set<String> includedWorlds;
+    private Set<String> hiddenWorlds;
 
     public void onEnable() {
         load();
@@ -51,8 +50,8 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin {
                 props.setProperty("minequery-port", "25566");
                 props.setProperty("password", "");
                 props.setProperty("logging", "true");
-                props.setProperty("included-servers", "*");
-                props.setProperty("hidden-servers", "hidden1,hidden2");
+                props.setProperty("included-worlds", "*");
+                props.setProperty("hidden-worlds", "hidden1,hidden2");
 
                 OutputStream out = new FileOutputStream(file);
                 props.store(out, "Minequery settings");
@@ -67,8 +66,8 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin {
             port = Integer.parseInt(props.getProperty("minequery-port", "25566"));
             password = props.getProperty("password", "");
             logging = Boolean.parseBoolean(props.getProperty("logging", "true"));
-            includedServers = new HashSet<>(Arrays.asList(props.getProperty("included-servers", "*").toLowerCase().split(",")));
-            hiddenServers = new HashSet<>(Arrays.asList(props.getProperty("hidden-servers", "").toLowerCase().split(",")));
+            includedWorlds = new HashSet<>(Arrays.asList(props.getProperty("included-worlds", "*").toLowerCase().split(",")));
+            hiddenWorlds = new HashSet<>(Arrays.asList(props.getProperty("hidden-worlds", "").toLowerCase().split(",")));
             if(serverIP.equals("")) {
                 serverIP = "ANY";
             }
@@ -99,8 +98,8 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin {
 
     @Override
     public boolean isIncluded(String name) {
-        boolean isIncluded = includedServers.isEmpty() || includedServers.contains("*") || includedServers.contains(name.toLowerCase());
-        return isIncluded && !hiddenServers.contains(name.toLowerCase());
+        boolean isIncluded = includedWorlds.isEmpty() || includedWorlds.contains("*") || includedWorlds.contains(name.toLowerCase());
+        return isIncluded && !hiddenWorlds.contains(name.toLowerCase());
     }
 
     @Override
