@@ -169,13 +169,18 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin {
         getLogger().info("Executing: " + command);
         Object pauseLock = new Object();
         getServer().getScheduler().runTask(this, () -> {
-            getServer().dispatchCommand(querySender, command);
-            pauseLock.notify();
+            synchronized (pauseLock) {
+                getServer().dispatchCommand(querySender, command);
+                pauseLock.notify();
+            }
         });
-        try {
-            pauseLock.wait();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+
+        synchronized (pauseLock) {
+            try {
+                pauseLock.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         return querySender.getResponse();
     }
@@ -196,13 +201,17 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin {
             Player finalP = p;
             Object pauseLock = new Object();
             getServer().getScheduler().runTask(this, () -> {
-                r.set(getServer().dispatchCommand(finalP, command));
-                pauseLock.notify();
+                synchronized (pauseLock) {
+                    r.set(getServer().dispatchCommand(finalP, command));
+                    pauseLock.notify();
+                }
             });
-            try {
-                pauseLock.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            synchronized (pauseLock) {
+                try {
+                    pauseLock.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
             return r.get() != null && r.get();
         }
