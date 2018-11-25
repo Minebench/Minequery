@@ -54,7 +54,7 @@ public final class Request extends Thread {
             return;
         }
 
-        plugin.getLogger().log(Level.INFO, socket.getInetAddress().getHostAddress() + " - '" + request + "' - " + authenticated + (input.isEmpty() ? "" : " - ['" + String.join("','" + "']")));
+        plugin.log(socket.getInetAddress().getHostAddress() + " - '" + request + "' - " + authenticated + (input.isEmpty() ? "" : " - ['" + String.join("','" + "']")));
 
         if ("QUERY".equalsIgnoreCase(request) || "QUERY_JSON".equalsIgnoreCase(request)) {
             QueryData queryData = plugin.getQueryData(socket);
