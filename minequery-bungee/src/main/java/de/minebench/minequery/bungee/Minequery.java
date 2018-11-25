@@ -67,7 +67,10 @@ public final class Minequery extends Plugin implements MinequeryPlugin, Listener
             Properties props = new Properties();
             props.load(new FileReader(file));
 
-            serverIP = props.getProperty("server-ip", "ANY");
+            serverIP = props.getProperty("server-ip", "SELF");
+            if (serverIP.isEmpty() || serverIP.equalsIgnoreCase("SELF")) {
+                serverIP = info.getHost().getAddress().getHostAddress();
+            }
             port = Integer.parseInt(props.getProperty("minequery-port", "25566"));
             password = props.getProperty("password", "");
             logging = Boolean.parseBoolean(props.getProperty("logging", "true"));
