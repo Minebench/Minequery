@@ -26,16 +26,16 @@ public final class Request extends Thread {
 
     public void run() {
         try {
-            parseRequest(socket);
-            handleRequest(socket);
+            parseRequest();
+            handleRequest();
 
             socket.close();
         } catch(IOException ex) {
-            plugin.getLogger().log(Level.SEVERE, "Minequery server thread shutting down", ex);
+            plugin.getLogger().log(Level.SEVERE, "Exception while handling request", ex);
         }
     }
 
-    private void parseRequest(Socket socket) throws IOException {
+    private void parseRequest() throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         String line;
         while ((line = reader.readLine()) != null) {
@@ -49,7 +49,7 @@ public final class Request extends Thread {
         }
     }
 
-    private void handleRequest(Socket socket) throws IOException {
+    private void handleRequest() throws IOException {
         if (request == null) {
             return;
         }
@@ -100,7 +100,7 @@ public final class Request extends Thread {
             if (!response.isEmpty()) {
                 DataOutputStream out = new DataOutputStream(socket.getOutputStream());
                 for (String s : response) {
-                    out.writeUTF(s);
+                    out.writeBytes(s);
                 }
             }
         } else {

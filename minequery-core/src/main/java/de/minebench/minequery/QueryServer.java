@@ -29,7 +29,7 @@ public final class QueryServer implements Runnable {
                 Socket socket = listener.accept();
 
 
-                new Request(plugin, socket).start();
+                new Thread(new Request(plugin, socket)).start();
             }
         } catch(IOException ex) {
             plugin.getLogger().info("Stopping server");
