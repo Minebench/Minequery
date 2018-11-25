@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
 public final class Minequery extends JavaPlugin implements MinequeryPlugin {
@@ -166,7 +167,16 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin {
     public List<String> executeCommand(String command) {
         BukkitQuerySender querySender = new BukkitQuerySender(this);
         getLogger().info("Executing: " + command);
-        getServer().dispatchCommand(querySender, command);
+        Object pauseLock = new Object();
+        getServer().getScheduler().runTask(this, () -> {
+            getServer().dispatchCommand(querySender, command);
+            pauseLock.notify();
+        });
+        try {
+            pauseLock.wait();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         return querySender.getResponse();
     }
 
@@ -182,7 +192,19 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin {
         }
         if (p != null) {
             getLogger().info("Making " + p.getName() + " execute:" + command);
-            return getServer().dispatchCommand(p, command);
+            AtomicReference<Boolean> r = new AtomicReference<>(null);
+            Player finalP = p;
+            Object pauseLock = new Object();
+            getServer().getScheduler().runTask(this, () -> {
+                r.set(getServer().dispatchCommand(finalP, command));
+                pauseLock.notify();
+            });
+            try {
+                pauseLock.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return r.get() != null && r.get();
         }
         return false;
     }
