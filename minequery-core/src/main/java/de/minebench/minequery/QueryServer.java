@@ -5,7 +5,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public final class QueryServer implements Runnable {
+public final class QueryServer extends Thread {
     private final MinequeryPlugin plugin;
     private final ServerSocket listener;
 

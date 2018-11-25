@@ -33,7 +33,6 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin {
     private boolean logging;
     private Set<String> includedServers;
     private Set<String> hiddenServers;
-    private BukkitTask serverTask;
 
     public void onEnable() {
         load();
@@ -74,7 +73,7 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin {
                 serverIP = "ANY";
             }
             server = new QueryServer(this, serverIP, port);
-            serverTask = getServer().getScheduler().runTaskAsynchronously(this, server);
+            server.start();
             //server = new QueryServer(this, serverIP, port);
             //server.start();
         } catch(IOException ex) {
@@ -86,9 +85,7 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin {
         try {
             if (server != null) {
                 server.getListener().close();
-            }
-            if (serverTask != null) {
-                serverTask.cancel();
+                server.interrupt();
             }
         } catch (IOException ex) {
             getLogger().log(Level.WARNING, "Unable to close the Minequery listener", ex);
