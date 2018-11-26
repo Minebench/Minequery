@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 public final class Request extends Thread {
     private final MinequeryPlugin plugin;
     private final Socket socket;
-    private String request = null;
+    private Type type = null;
     private boolean authenticated = false;
     private List<String> input = new ArrayList<>();
 
@@ -38,11 +38,20 @@ public final class Request extends Thread {
     private void parseRequest() throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         String line;
-        while ((line = reader.readLine()) != null) {
-            if (request == null) {
-                request = line;
+        while ((line = reader.readLine()) != null && !line.equalsIgnoreCase("{END}")
+                && (type == null || type.inputLength < 0 || input.size() < type.inputLength)) {
+            if (type == null) {
+                try {
+                    type = Type.valueOf(line.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    plugin.getLogger().log(Level.WARNING, socket.getInetAddress().getHostAddress() + " tried to request '" + type + "' which is not supported?");
+                    break;
+                }
             } else if (!authenticated) {
                 authenticated = !plugin.getPassword().isEmpty() && line.equals(plugin.getPassword());
+                if (!authenticated) {
+                    break;
+                }
             } else {
                 input.add(line);
             }
@@ -50,61 +59,86 @@ public final class Request extends Thread {
     }
 
     private void handleRequest() throws IOException {
-        if (request == null) {
+        if (type == null) {
             return;
         }
 
-        plugin.log(socket.getInetAddress().getHostAddress() + " - '" + request + "' - " + authenticated + (input.isEmpty() ? "" : " - ['" + String.join("','", input) + "']"));
+        plugin.log(socket.getInetAddress().getHostAddress() + " - '" + type + "' - " + authenticated + (input.isEmpty() ? "" : " - ['" + String.join("','", input) + "']"));
 
-        if ("QUERY".equalsIgnoreCase(request) || "QUERY_JSON".equalsIgnoreCase(request)) {
-            QueryData queryData = plugin.getQueryData(socket);
+        if (type.requiresAuthentication && !authenticated) {
+            return;
+        }
 
-            if (queryData.disconnected != null) {
-                DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-                out.writeBytes(queryData.disconnected);
-                return;
-            }
+        List<String> responseList = new ArrayList<>();
+        switch (type) {
+            case QUERY:
+            case QUERY_JSON:
+                QueryData queryData = plugin.getQueryData(socket);
 
-            int onlinePlayers = queryData.getOnline();
-            if (onlinePlayers > queryData.getNameList().size()) {
-                onlinePlayers = queryData.getNameList().size();
-            }
-
-            Response response = new Response(
-                    plugin.getListenerPort(),
-                    queryData.getNameList(),
-                    queryData.getUuidList(),
-                    onlinePlayers,
-                    queryData.getMaxPlayers()
-            );
-
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-            if (request.toUpperCase().endsWith("JSON")) {
-                out.writeBytes(response.toJson());
-            } else {
-                out.writeBytes(response.toString());
-            }
-        } else if (authenticated) {
-            List<String> response = new ArrayList<>();
-            if ("COMMAND".equalsIgnoreCase(request)) {
-                for (String command : input) {
-                    response.add("COMMAND:" + command);
-                    response.addAll(plugin.executeCommand(command));
+                if (queryData.disconnected != null) {
+                    DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+                    out.writeBytes(queryData.disconnected);
+                    return;
                 }
-            } else if ("PLAYER_COMMAND".equalsIgnoreCase(request)) {
+
+                int onlinePlayers = queryData.getOnline();
+                if (onlinePlayers > queryData.getNameList().size()) {
+                    onlinePlayers = queryData.getNameList().size();
+                }
+
+                Response response = new Response(
+                        plugin.getListenerPort(),
+                        queryData.getNameList(),
+                        queryData.getUuidList(),
+                        onlinePlayers,
+                        queryData.getMaxPlayers()
+                );
+
+                if (type == Type.QUERY_JSON) {
+                    responseList.add(response.toJson());
+                } else {
+                    responseList.add(response.toString());
+                }
+                break;
+            case COMMAND:
+                for (String command : input) {
+                    responseList.add("COMMAND:" + command);
+                    responseList.addAll(plugin.executeCommand(command));
+                }
+                break;
+            case PLAYER_COMMAND:
                 for (String command : input) {
                     String[] parts = command.split(":", 2);
-                    response.add("PLAYER_COMMAND:" + command + ":" + plugin.executeCommand(parts[0], parts[1]));
+                    responseList.add("PLAYER_COMMAND:" + command + ":" + plugin.executeCommand(parts[0], parts[1]));
                 }
+                break;
+            default:
+                plugin.getLogger().log(Level.WARNING, socket.getInetAddress().getHostAddress() + " tried to request '" + type + "' which is not supported?");
+        }
+        if (!responseList.isEmpty()) {
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            for (String s : responseList) {
+                out.writeBytes(s);
             }
-            if (!response.isEmpty()) {
-                DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-                for (String s : response) {
-                    out.writeBytes(s);
-                }
-            }
-        } else {
-            plugin.getLogger().log(Level.WARNING, socket.getInetAddress().getHostAddress() + " tried to request '" + request + "' which is not supported?");
+        }
+    }
+
+    public enum Type {
+        QUERY,
+        QUERY_JSON,
+        COMMAND(true, -1),
+        PLAYER_COMMAND(true, -1);
+
+        private final boolean requiresAuthentication;
+        private final int inputLength;
+
+        Type() {
+            this(false, 0);
+        }
+
+        Type(boolean requiresAuthentication, int inputLength) {
+            this.requiresAuthentication = requiresAuthentication;
+            this.inputLength = inputLength;
         }
     }
 
