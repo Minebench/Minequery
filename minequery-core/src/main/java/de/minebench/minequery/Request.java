@@ -142,7 +142,7 @@ public final class Request extends Thread {
         if (!responseList.isEmpty()) {
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
             for (String s : responseList) {
-                out.writeBytes(s);
+                out.writeBytes(s + "\n");
             }
         }
     }
@@ -186,7 +186,7 @@ public final class Request extends Thread {
                     "PLAYERCOUNT " + onlineCount + "\n" +
                     "MAXPLAYERS " + maxPlayers + "\n" +
                     "PLAYERLIST " + Arrays.toString(playerList.toArray()) + "\n" +
-                    "UUIDLIST " + Arrays.toString(uuidList.toArray()) + "\n";
+                    "UUIDLIST " + Arrays.toString(uuidList.toArray()) + "";
         }
 
         public String toJson() {
@@ -196,7 +196,7 @@ public final class Request extends Thread {
                     "\"maxPlayers\":" + maxPlayers + "," +
                     "\"playerList\":[" + playerList.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(",")) + "]," +
                     "\"uuidList\":[" + uuidList.stream().map(u -> "\"" + u.toString() + "\"").collect(Collectors.joining(",")) + "]" +
-                    "}\n";
+                    "}";
         }
     }
 }
