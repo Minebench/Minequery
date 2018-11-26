@@ -30,31 +30,42 @@ public final class Request extends Thread {
             handleRequest();
 
             socket.close();
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().log(Level.WARNING, socket.getInetAddress().getHostAddress() + " tried to request '" + type + "' which is not supported?");
         } catch(IOException ex) {
             plugin.getLogger().log(Level.SEVERE, "Exception while handling request", ex);
+        } finally {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     private void parseRequest() throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        String line;
-        while ((line = reader.readLine()) != null && !line.equalsIgnoreCase("{END}")
-                && (type == null || type.inputLength < 0 || input.size() < type.inputLength)) {
-            if (type == null) {
-                try {
-                    type = Type.valueOf(line.toUpperCase());
-                } catch (IllegalArgumentException e) {
-                    plugin.getLogger().log(Level.WARNING, socket.getInetAddress().getHostAddress() + " tried to request '" + type + "' which is not supported?");
-                    break;
-                }
-            } else if (!authenticated) {
-                authenticated = !plugin.getPassword().isEmpty() && line.equals(plugin.getPassword());
-                if (!authenticated) {
-                    break;
-                }
+        String line = reader.readLine();
+        if (line == null) {
+            return;
+        }
+        String[] parts = line.split("\\|");
+        type = Type.valueOf(parts[0].toUpperCase());
+        int contentIndex = 1;
+        if (type.requiresAuthentication) {
+            if (parts.length > 1 && parts[1].equals(plugin.getPassword())) {
+                authenticated = true;
             } else {
-                input.add(line);
+                plugin.log(socket.getInetAddress().getHostAddress() + " tried to request '" + type + "' but did not authenticate!");
+                return;
             }
+            contentIndex = 2;
+        }
+        List<String> input = Arrays.stream(parts).skip(contentIndex).collect(Collectors.toList());
+        if (type.inputLength < 0 || input.size() == type.inputLength) {
+            this.input = input;
+        } else {
+            plugin.log(socket.getInetAddress().getHostAddress() + " tried to request '" + type + "' but did not provide enough input parameters! (Requires " + type.inputLength + ")");
         }
     }
 
