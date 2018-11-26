@@ -10,11 +10,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public final class Request extends Thread {
     private final MinequeryPlugin plugin;
     private final Socket socket;
+    private final static char SEPARATOR = ' ';
     private Type type = null;
     private boolean authenticated = false;
     private List<String> input = new ArrayList<>();
@@ -47,7 +49,7 @@ public final class Request extends Thread {
         if (line == null) {
             return;
         }
-        String[] parts = line.split("\\|");
+        String[] parts = line.split(Pattern.quote(String.valueOf(SEPARATOR)));
         type = Type.valueOf(parts[0].toUpperCase());
         int contentIndex = 1;
         if (type.requiresAuthentication) {
@@ -60,10 +62,22 @@ public final class Request extends Thread {
             }
             contentIndex = 2;
         }
-        List<String> input = Arrays.stream(parts).skip(contentIndex).collect(Collectors.toList());
-        if (type.inputLength < 0 || input.size() == type.inputLength) {
-            this.input = input;
-        } else {
+        StringBuilder quoted = null;
+        for (int i = contentIndex; i < parts.length; i++) {
+            if (quoted != null) {
+                if (parts[i].endsWith("\"")) {
+                    input.add(quoted.toString() + SEPARATOR + parts[i].substring(0, parts[i].length() - 1));
+                    quoted = null;
+                } else {
+                    quoted.append(SEPARATOR).append(parts[i]);
+                }
+            } else if (parts[i].startsWith("\"")) {
+                quoted = new StringBuilder(parts[i].substring(1));
+            } else {
+                input.add(parts[i]);
+            }
+        }
+        if (type.inputLength >= 0 && input.size() != type.inputLength) {
             plugin.log(socket.getInetAddress().getHostAddress() + " tried to request '" + type + "' but did not provide enough input parameters! (Requires " + type.inputLength + ")");
         }
     }
