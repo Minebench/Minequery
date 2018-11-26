@@ -74,6 +74,10 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin {
             }
             server = new QueryServer(this, serverIP, port);
             server.start();
+            if (password.isEmpty()) {
+                getLogger().log(Level.WARNING, "No password is set! Requests that require authentication will not work!");
+            }
+
             //server = new QueryServer(this, serverIP, port);
             //server.start();
         } catch(IOException ex) {

@@ -51,7 +51,9 @@ public final class Request extends Thread {
         type = Type.valueOf(parts[0].toUpperCase());
         int contentIndex = 1;
         if (type.requiresAuthentication) {
-            if (parts.length > 1 && parts[1].equals(plugin.getPassword())) {
+            if (plugin.getPassword().isEmpty()) {
+                plugin.log(socket.getInetAddress().getHostAddress() + " tried to request '" + type + "' which requires authentication but no password was set!");
+            } else if (parts.length > 1 && parts[1].equals(plugin.getPassword())) {
                 authenticated = true;
             } else {
                 plugin.log(socket.getInetAddress().getHostAddress() + " tried to request '" + type + "' but did not authenticate!");
