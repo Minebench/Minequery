@@ -28,8 +28,6 @@ public final class Request extends Thread {
         try {
             parseRequest();
             handleRequest();
-
-            socket.close();
         } catch (IllegalArgumentException e) {
             plugin.getLogger().log(Level.WARNING, socket.getInetAddress().getHostAddress() + " tried to request '" + type + "' which is not supported?");
         } catch(IOException ex) {
@@ -57,7 +55,6 @@ public final class Request extends Thread {
                 authenticated = true;
             } else {
                 plugin.log(socket.getInetAddress().getHostAddress() + " tried to request '" + type + "' but did not authenticate!");
-                return;
             }
             contentIndex = 2;
         }
