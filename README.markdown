@@ -1,10 +1,6 @@
-# Minequery 1.5
+# Minequery 1.7
 
-Minequery is a server plugin for the Minecraft server proxy BungeeCord. It creates a small server listening for requests and responds with of the Minecraft server port, how many players are online, and the player list.
-
-Looking for the Bukkit version of Minequery? It has been moved to the [hmod](https://github.com/vexsoftware/minequery/) branch.
-
-Looking for the old hMod version of Minequery? It has been moved to the [hmod](https://github.com/vexsoftware/minequery/tree/hmod) branch.
+Minequery is a server plugin for the Minecraft server proxy BungeeCord and the server mod Bukkit. It creates a small server listening for requests and responds with of the Minecraft server port, how many players are online, and the player list.
 
 ## Configuring
 
@@ -24,10 +20,36 @@ Example:
 
 `minequery-port` is the port on which the query server runs on.
 
-    minequery-port=25566
+    password=
 
-`max-players` is the maximum amount of players this server can hold.
+`password` is the password that is necessary for sending commands to the server. Password protected functions are disabled with an empty password!
+
+    logging=true
+
+`logging` enables some more detailed logging of every request to the console.
+
+### Bukkit specific settings
+
+    included-worlds=*
+
+`included-worlds` sets the worlds that should be included in the player list. Use commas to separate world names or `*` for all worlds.
+
+    hidden-worlds=hidden1,hidden2
+
+`hidden-worlds` sets the worlds that should be hidden in the player list. Use commas to separate world names.
+
+### Bungee specific settings
+
+    included-servers=*
+
+`included-servers` sets the servers that should be included in the player list. Use commas to separate server names or `*` for all server.
+
+    hidden-servers=hidden1,hidden2
+
+`hidden-servers` sets the servers that should be hidden in the player list. Use commas to separate server names.
 
 ## License
 
 Copyright (c) 2011 Vex Software LLC, released under the GPL v3.
+
+Copyright (c) 2018 Minebench.de, released under the GPL v3.
