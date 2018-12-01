@@ -3,7 +3,9 @@ package de.minebench.minequery.bukkit;
 import de.minebench.minequery.QuerySender;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Server;
-import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.conversations.Conversation;
+import org.bukkit.conversations.ConversationAbandonedEvent;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.permissions.PermissionAttachmentInfo;
@@ -12,7 +14,7 @@ import org.bukkit.plugin.Plugin;
 import java.util.HashSet;
 import java.util.Set;
 
-public class BukkitQuerySender extends QuerySender implements CommandSender {
+public class BukkitQuerySender extends QuerySender implements ConsoleCommandSender {
     private final Minequery plugin;
     private Spigot spigot;
 
@@ -113,6 +115,36 @@ public class BukkitQuerySender extends QuerySender implements CommandSender {
     @Override
     public void setOp(boolean value) {
 
+    }
+
+    @Override
+    public boolean isConversing() {
+        return false;
+    }
+
+    @Override
+    public void acceptConversationInput(String input) {
+
+    }
+
+    @Override
+    public boolean beginConversation(Conversation conversation) {
+        return false;
+    }
+
+    @Override
+    public void abandonConversation(Conversation conversation) {
+
+    }
+
+    @Override
+    public void abandonConversation(Conversation conversation, ConversationAbandonedEvent details) {
+
+    }
+
+    @Override
+    public void sendRawMessage(String message) {
+        sendMessage(message);
     }
 
     private class QuerySpigot extends Spigot {
