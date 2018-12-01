@@ -72,7 +72,11 @@ public final class Request extends Thread {
                     quoted.append(SEPARATOR).append(parts[i]);
                 }
             } else if (parts[i].startsWith("\"")) {
-                quoted = new StringBuilder(parts[i].substring(1));
+                if (parts[i].endsWith("\"")) {
+                    input.add(parts[i].substring(1, parts[i].length() - 1));
+                } else {
+                    quoted = new StringBuilder(parts[i].substring(1));
+                }
             } else {
                 input.add(parts[i]);
             }
