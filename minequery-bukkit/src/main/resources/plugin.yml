@@ -1,3 +1,4 @@
 name: '${minecraft.plugin.name}'
 main: de.minebench.minequery.bukkit.Minequery
 version: '${minecraft.plugin.version}'
+api-version: 1.13

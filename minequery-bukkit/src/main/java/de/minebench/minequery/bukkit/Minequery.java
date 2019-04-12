@@ -6,6 +6,8 @@ import de.minebench.minequery.MinequeryPlugin;
 import de.minebench.minequery.QueryData;
 import de.minebench.minequery.QueryServer;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -72,16 +74,31 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin {
             if(serverIP.equals("")) {
                 serverIP = "ANY";
             }
-            server = new QueryServer(this, serverIP, port);
-            server.start();
             if (password.isEmpty()) {
                 getLogger().log(Level.WARNING, "No password is set! Requests that require authentication will not work!");
             }
-
-            //server = new QueryServer(this, serverIP, port);
-            //server.start();
         } catch(IOException ex) {
             getLogger().log(Level.SEVERE, "Error initializing Minequery", ex);
+        }
+    }
+
+    @EventHandler
+    public void onServerLoaded(ServerLoadEvent event) {
+        try {
+            if (event.getType() == ServerLoadEvent.LoadType.RELOAD) {
+                if (server != null) {
+                    server.getListener().close();
+                    server.interrupt();
+                }
+            }
+        } catch (IOException ex) {
+            getLogger().log(Level.SEVERE, "Error stopping Minequery server", ex);
+        }
+        try {
+            server = new QueryServer(this, serverIP, port);
+            server.start();
+        } catch (IOException ex) {
+            getLogger().log(Level.SEVERE, "Error initializing Minequery Server", ex);
         }
     }
 
