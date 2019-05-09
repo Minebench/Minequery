@@ -130,14 +130,21 @@ public final class Request extends Thread {
                 break;
             case COMMAND:
                 for (String command : input) {
-                    responseList.add("COMMAND:" + command);
-                    responseList.addAll(plugin.executeCommand(command));
+                    String[] parts = command.split(":", 3);
+                    if (parts.length == 3 && parts[0].equalsIgnoreCase("name")) {
+                        responseList.add("NAME:" + parts[1]);
+                        responseList.add("COMMAND:" + parts[2]);
+                        responseList.addAll(plugin.executeCommand(parts[1], parts[2]));
+                    } else {
+                        responseList.add("COMMAND:" + command);
+                        responseList.addAll(plugin.executeCommand(command));
+                    }
                 }
                 break;
             case PLAYER_COMMAND:
                 for (String command : input) {
                     String[] parts = command.split(":", 2);
-                    responseList.add("PLAYER_COMMAND:" + command + ":" + plugin.executeCommand(parts[0], parts[1]));
+                    responseList.add("PLAYER_COMMAND:" + command + ":" + plugin.executePlayerCommand(parts[0], parts[1]));
                 }
                 break;
             default:

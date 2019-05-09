@@ -21,5 +21,7 @@ public interface MinequeryPlugin {
 
     List<String> executeCommand(String command);
 
-    boolean executeCommand(String player, String command);
+    List<String> executeCommand(String name, String command);
+
+    boolean executePlayerCommand(String player, String command);
 }

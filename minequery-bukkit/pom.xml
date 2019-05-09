@@ -6,12 +6,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>minequery-bukkit</artifactId>
-    <version>1.7-SNAPSHOT</version>
 
     <parent>
         <groupId>de.minebench.minequery</groupId>
         <artifactId>minequery-parent</artifactId>
-        <version>1.7-SNAPSHOT</version>
+        <version>1.8-SNAPSHOT</version>
     </parent>
 
     <repositories>

@@ -18,10 +18,14 @@ public class BukkitQuerySender extends QuerySender implements ConsoleCommandSend
     private final Minequery plugin;
     private Spigot spigot;
 
-    public BukkitQuerySender(Minequery plugin) {
-        super(plugin);
+    public BukkitQuerySender(Minequery plugin, String name) {
+        super(plugin, name);
         this.plugin = plugin;
         spigot = new QuerySpigot();
+    }
+
+    public BukkitQuerySender(Minequery plugin) {
+        this(plugin, plugin.getName());
     }
 
     @Override
@@ -40,11 +44,6 @@ public class BukkitQuerySender extends QuerySender implements ConsoleCommandSend
     @Override
     public Server getServer() {
         return plugin.getServer();
-    }
-
-    @Override
-    public String getName() {
-        return plugin.getName();
     }
 
     @Override

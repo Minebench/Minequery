@@ -7,7 +7,7 @@
     <groupId>de.minebench.minequery</groupId>
     <artifactId>minequery-parent</artifactId>
     <packaging>pom</packaging>
-    <version>1.7-SNAPSHOT</version>
+    <version>1.8-SNAPSHOT</version>
 
     <modules>
         <module>minequery-core</module>

@@ -12,14 +12,13 @@ public class BungeeQuerySender extends QuerySender implements CommandSender {
 
     private Minequery plugin;
 
-    public BungeeQuerySender(Minequery plugin) {
-        super(plugin);
+    public BungeeQuerySender(Minequery plugin, String name) {
+        super(plugin, name);
         this.plugin = plugin;
     }
 
-    @Override
-    public String getName() {
-        return plugin.getDescription().getName();
+    public BungeeQuerySender(Minequery plugin) {
+        this(plugin, plugin.getDescription().getName());
     }
 
     @Override

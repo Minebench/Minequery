@@ -165,14 +165,22 @@ public final class Minequery extends Plugin implements MinequeryPlugin, Listener
 
     @Override
     public List<String> executeCommand(String command) {
-        BungeeQuerySender querySender = new BungeeQuerySender(this);
+        return executeCommand(new BungeeQuerySender(this), command);
+    }
+
+    @Override
+    public List<String> executeCommand(String name, String command) {
+        return executeCommand(new BungeeQuerySender(this, name), command);
+    }
+
+    private List<String> executeCommand(BungeeQuerySender querySender, String command) {
         getLogger().info("Executing: " + command);
         getProxy().getPluginManager().dispatchCommand(querySender, command);
         return querySender.getResponse();
     }
 
     @Override
-    public boolean executeCommand(String player, String command) {
+    public boolean executePlayerCommand(String player, String command) {
         ProxiedPlayer p = getProxy().getPlayer(player);
         if (p == null && player.length() == 36) {
             try {

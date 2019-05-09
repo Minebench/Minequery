@@ -188,7 +188,15 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin, List
 
     @Override
     public List<String> executeCommand(String command) {
-        BukkitQuerySender querySender = new BukkitQuerySender(this);
+        return executeCommand(new BukkitQuerySender(this), command);
+    }
+
+    @Override
+    public List<String> executeCommand(String name, String command) {
+        return executeCommand(new BukkitQuerySender(this, name), command);
+    }
+
+    private List<String> executeCommand(BukkitQuerySender querySender, String command) {
         getLogger().info("Executing: " + command);
         Object pauseLock = new Object();
         getServer().getScheduler().runTask(this, () -> {
@@ -209,7 +217,7 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin, List
     }
 
     @Override
-    public boolean executeCommand(String player, String command) {
+    public boolean executePlayerCommand(String player, String command) {
         Player p = getServer().getPlayer(player);
         if (p == null && player.length() == 36) {
             try {
