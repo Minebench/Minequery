@@ -10,7 +10,7 @@
     <parent>
         <artifactId>minequery-parent</artifactId>
         <groupId>de.minebench.minequery</groupId>
-        <version>1.7-SNAPSHOT</version>
+        <version>1.8-SNAPSHOT</version>
     </parent>
 
     <properties>
