@@ -17,6 +17,8 @@ public interface MinequeryPlugin {
 
     QueryData getQueryData(Socket socket);
 
+    String getPerformanceData();
+
     QueryServer getQueryServer();
 
     List<String> executeCommand(String command);

@@ -99,6 +99,9 @@ public final class Request extends Thread {
 
         List<String> responseList = new ArrayList<>();
         switch (type) {
+            case PERFORMANCE:
+                responseList.add(plugin.getPerformanceData());
+                break;
             case QUERY:
             case QUERY_JSON:
                 QueryData queryData = plugin.getQueryData(socket);
@@ -161,6 +164,7 @@ public final class Request extends Thread {
     public enum Type {
         QUERY,
         QUERY_JSON,
+        PERFORMANCE(true, 0),
         COMMAND(true, -1),
         PLAYER_COMMAND(true, -1);
 

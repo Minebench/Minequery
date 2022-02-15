@@ -159,6 +159,11 @@ public final class Minequery extends Plugin implements MinequeryPlugin, Listener
     }
 
     @Override
+    public String getPerformanceData() {
+        return "";
+    }
+
+    @Override
     public QueryServer getQueryServer() {
         return server;
     }

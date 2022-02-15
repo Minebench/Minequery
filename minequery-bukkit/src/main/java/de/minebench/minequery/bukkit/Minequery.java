@@ -5,11 +5,14 @@ import com.destroystokyo.paper.network.StatusClient;
 import de.minebench.minequery.MinequeryPlugin;
 import de.minebench.minequery.QueryData;
 import de.minebench.minequery.QueryServer;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -25,6 +28,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.logging.Level;
 
 public final class Minequery extends JavaPlugin implements MinequeryPlugin, Listener {
@@ -179,6 +183,26 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin, List
         data.setMaxPlayers(pingEvent.getMaxPlayers());
 
         return data;
+    }
+
+    @Override
+    public String getPerformanceData() {
+        JSONObject json = new JSONObject();
+        json.put("tps", getServer().getTPS());
+        json.put("mspt", getServer().getAverageTickTime());
+        json.put("chunks", globalCount(World::getChunkCount));
+        json.put("entities", globalCount(World::getEntityCount));
+        json.put("tile-entities", globalCount(World::getTileEntityCount));
+        json.put("tickable-tile-entities", globalCount(World::getTickableTileEntityCount));
+        return json.toJSONString();
+    }
+
+    private int globalCount(Function<World, Integer> getter) {
+        int amount = 0;
+        for (World world : getServer().getWorlds()) {
+            amount += getter.apply(world);
+        }
+        return amount;
     }
 
     @Override
