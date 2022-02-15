@@ -1,6 +1,8 @@
 package de.minebench.minequery.bukkit;
 
 import de.minebench.minequery.QuerySender;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Server;
 import org.bukkit.command.ConsoleCommandSender;
@@ -13,6 +15,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 public class BukkitQuerySender extends QuerySender implements ConsoleCommandSender {
     private final Minequery plugin;
@@ -42,6 +45,16 @@ public class BukkitQuerySender extends QuerySender implements ConsoleCommandSend
     }
 
     @Override
+    public void sendMessage(UUID uuid, String message) {
+        sendMessage(message);
+    }
+
+    @Override
+    public void sendMessage(UUID uuid, String[] messages) {
+        sendMessage(messages);
+    }
+
+    @Override
     public Server getServer() {
         return plugin.getServer();
     }
@@ -49,6 +62,11 @@ public class BukkitQuerySender extends QuerySender implements ConsoleCommandSend
     @Override
     public Spigot spigot() {
         return spigot;
+    }
+
+    @Override
+    public Component name() {
+        return LegacyComponentSerializer.legacySection().deserialize(getName());
     }
 
     @Override
@@ -144,6 +162,11 @@ public class BukkitQuerySender extends QuerySender implements ConsoleCommandSend
     @Override
     public void sendRawMessage(String message) {
         sendMessage(message);
+    }
+
+    @Override
+    public void sendRawMessage(UUID uuid, String message) {
+        sendRawMessage(message);
     }
 
     private class QuerySpigot extends Spigot {
