@@ -13,6 +13,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.io.File;
@@ -41,7 +42,11 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin, List
     public static final String CONFIG_FILE = "minequery.properties";
     private static final Supplier<JSONObject> PERFORMANCE_DATA_BUILDER = () -> {
         JSONObject json = new JSONObject();
-        json.put("tps", Bukkit.getTPS());
+        JSONArray tpsArray = new JSONArray();
+        for (double tps : Bukkit.getTPS()) {
+            tpsArray.add(tps);
+        }
+        json.put("tps", tpsArray);
         json.put("mspt", Bukkit.getAverageTickTime());
         json.put("chunks", globalCount(World::getChunkCount));
         json.put("entities", globalCount(World::getEntityCount));
