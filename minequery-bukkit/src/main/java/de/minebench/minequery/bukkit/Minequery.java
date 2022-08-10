@@ -184,7 +184,8 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin, List
                         return null;
                     }
                 },
-                getServer().getMotd(),
+                getServer().motd(),
+                getServer().shouldSendChatPreviews(),
                 getServer().getOnlinePlayers().size(),
                 getServer().getMaxPlayers(),
                 getName(),
