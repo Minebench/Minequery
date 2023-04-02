@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -56,7 +57,7 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin, List
     };
     private String serverIP;
     private int port;
-    private QueryServer server;
+    private List<QueryServer> servers = new ArrayList<>();
     private String password;
     private boolean logging;
     private Set<String> includedWorlds;
@@ -111,32 +112,35 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin, List
 
     @EventHandler
     public void onServerLoaded(ServerLoadEvent event) {
-        try {
-            if (event.getType() == ServerLoadEvent.LoadType.RELOAD) {
-                if (server != null) {
+        if (event.getType() == ServerLoadEvent.LoadType.RELOAD) {
+            for (QueryServer server : servers) {
+                try {
                     server.getListener().close();
                     server.interrupt();
+                } catch (IOException ex) {
+                    getLogger().log(Level.WARNING, "Unable to close the Minequery listener", ex);
                 }
             }
-        } catch (IOException ex) {
-            getLogger().log(Level.SEVERE, "Error stopping Minequery server", ex);
         }
         try {
-            server = new QueryServer(this, serverIP, port);
-            server.start();
+            for (String s : serverIP.split(",")) {
+                QueryServer server = new QueryServer(this, s, port);
+                server.start();
+                servers.add(server);
+            }
         } catch (IOException ex) {
             getLogger().log(Level.SEVERE, "Error initializing Minequery Server", ex);
         }
     }
 
     public void onDisable() {
-        try {
-            if (server != null) {
+        for (QueryServer server : servers) {
+            try {
                 server.getListener().close();
                 server.interrupt();
+            } catch (IOException ex) {
+                getLogger().log(Level.WARNING, "Unable to close the Minequery listener", ex);
             }
-        } catch (IOException ex) {
-            getLogger().log(Level.WARNING, "Unable to close the Minequery listener", ex);
         }
     }
 
@@ -232,7 +236,7 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin, List
 
     @Override
     public QueryServer getQueryServer() {
-        return server;
+        return servers.isEmpty() ? null : servers.get(0);
     }
 
     @Override
