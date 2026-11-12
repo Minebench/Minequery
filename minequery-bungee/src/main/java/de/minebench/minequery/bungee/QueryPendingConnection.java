@@ -8,7 +8,9 @@ import net.md_5.bungee.api.connection.PendingConnection;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class QueryPendingConnection extends QueryData implements PendingConnection {
     private final Minequery plugin;
@@ -70,8 +72,23 @@ public class QueryPendingConnection extends QueryData implements PendingConnecti
     }
 
     @Override
+    public boolean isTransferred() {
+        return false;
+    }
+
+    @Override
+    public CompletableFuture<byte[]> retrieveCookie(String s) {
+        return CompletableFuture.completedFuture(new byte[0]);
+    }
+
+    @Override
     public InetSocketAddress getAddress() {
         return new InetSocketAddress(socket.getInetAddress(), socket.getPort());
+    }
+
+    @Override
+    public SocketAddress getSocketAddress() {
+        return getAddress();
     }
 
     @Override

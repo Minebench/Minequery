@@ -2,7 +2,8 @@ package de.minebench.minequery.bukkit;
 
 import com.destroystokyo.paper.event.server.PaperServerListPingEvent;
 import com.destroystokyo.paper.network.StatusClient;
-import com.google.common.collect.ImmutableMap;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import de.minebench.minequery.MinequeryPlugin;
 import de.minebench.minequery.QueryData;
 import de.minebench.minequery.QueryServer;
@@ -13,8 +14,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -23,6 +22,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -41,18 +41,18 @@ import java.util.logging.Level;
 
 public final class Minequery extends JavaPlugin implements MinequeryPlugin, Listener {
     public static final String CONFIG_FILE = "minequery.properties";
-    private static final Supplier<JSONObject> PERFORMANCE_DATA_BUILDER = () -> {
-        JSONObject json = new JSONObject();
-        JSONArray tpsArray = new JSONArray();
+    private static final Supplier<JsonObject> PERFORMANCE_DATA_BUILDER = () -> {
+        JsonObject json = new JsonObject();
+        JsonArray tpsArray = new JsonArray();
         for (double tps : Bukkit.getTPS()) {
             tpsArray.add(tps);
         }
-        json.put("tps", tpsArray);
-        json.put("mspt", Bukkit.getAverageTickTime());
-        json.put("chunks", globalCount(World::getChunkCount));
-        json.put("entities", globalCount(World::getEntityCount));
-        json.put("tile-entities", globalCount(World::getTileEntityCount));
-        json.put("tickable-tile-entities", globalCount(World::getTickableTileEntityCount));
+        json.add("tps", tpsArray);
+        json.addProperty("mspt", Bukkit.getAverageTickTime());
+        json.addProperty("chunks", globalCount(World::getChunkCount));
+        json.addProperty("entities", globalCount(World::getEntityCount));
+        json.addProperty("tile-entities", globalCount(World::getTileEntityCount));
+        json.addProperty("tickable-tile-entities", globalCount(World::getTickableTileEntityCount));
         return json;
     };
     private String serverIP;
@@ -174,6 +174,11 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin, List
         PaperServerListPingEvent pingEvent = new PaperServerListPingEvent(
                 new StatusClient() {
                     @Override
+                    public SocketAddress getSocketAddress() {
+                        return getAddress();
+                    }
+
+                    @Override
                     public InetSocketAddress getAddress() {
                         return new InetSocketAddress(socket.getInetAddress(), socket.getPort());
                     }
@@ -213,16 +218,18 @@ public final class Minequery extends JavaPlugin implements MinequeryPlugin, List
     @Override
     public String getPerformanceData() {
         if (getServer().isPrimaryThread()) {
-            return PERFORMANCE_DATA_BUILDER.get().toJSONString();
+            return PERFORMANCE_DATA_BUILDER.get().toString();
         }
-        CompletableFuture<JSONObject> future = new CompletableFuture<>();
+        CompletableFuture<JsonObject> future = new CompletableFuture<>();
         getServer().getScheduler().runTask(this,
                 () -> future.complete(PERFORMANCE_DATA_BUILDER.get()));
         try {
-            return future.get(1, TimeUnit.SECONDS).toJSONString();
+            return future.get(1, TimeUnit.SECONDS).toString();
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             e.printStackTrace();
-            return new JSONObject(ImmutableMap.of("error", e.getMessage())).toJSONString();
+            JsonObject error = new JsonObject();
+            error.addProperty("error", e.getMessage());
+            return error.toString();
         }
     }
 
